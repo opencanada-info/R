@@ -1,0 +1,88 @@
+
+
+
+
+```{r -functions}
+
+
+x <- c('16,296 (12.4%)', "2,750 (2.1%)")
+
+str2number <- function (x,i=1) {
+  x %>%  gsub( "[(),%]", "", .) %>% strsplit(" ") %>% sapply("[[", i) %>% as.numeric()
+  # as.numeric(sapply( gsub("[(),%]", "", x) %>% strsplit(" "), "[[", i))
+}
+
+x <- c("18�\u0080\u009329" ,"30�\u0080\u009339")
+
+```
+
+
+
+# *** OLD WAY Covid cases by Vaccination status ****
+
+```{r }
+
+library(googlesheets4); gs4_deauth()
+
+# 'Cases following vaccination (Source: [PHAC-1], Table 2 _
+strPhac1 <- "https://docs.google.com/spreadsheets/d/1lSO5jJwTkMNGl9kk6Y5jeGORGS11KzEE5yTxBGrGYKw"
+
+# Cases by vax Prior to June ----
+
+dtPHAC.as_of <- read_sheet(strPhac1,  sheet=1,  col_names=T, 
+                       range="A8:B40", col_types="D" ) %>% setDT 
+dtPHAC.123 <- read_sheet(strPhac1,  sheet=1,  col_names=T, 
+                       range="A8:C40", col_types="DDd" ) %>% setDT 
+dtPHAC.raw <- read_sheet(strPhac1,  sheet=1,  col_names=T, 
+                         range="AD8:AX40", col_types="d" ) %>% setDT 
+dtPHAC <- dtPHAC.t %>% cbind(dtPHAC.raw )
+
+# Cases by vax and age  after June ----
+
+dtCasesByVaxAge <- 
+  read_sheet(strPhac1,  sheet=2,  col_names=T, 
+                       range="A22:G30", col_types="c" ) %>% setDT
+
+dtCasesByVaxAge[1:2]
+dtCasesByVaxAge %>% names
+
+
+# Deaths by vax after June ----
+
+
+dtDeathsByVax <- cbind (
+  read_sheet(strPhac1,  sheet=3,  col_names=T, 
+                       range="A2:A10", col_types="D" ) %>% setDT, 
+  read_sheet(strPhac1,  sheet=3,  col_names=T, 
+                       range="B2:S10", col_types="d" ) %>% setDT
+  )
+dtDeathsByVax[1:2]
+dtDeathsByVax %>% names
+
+
+```
+
+####  Covid Deaths by Age
+
+```{r }
+
+
+# Deaths by age  ----
+
+
+strPhac1_age <- "https://docs.google.com/spreadsheets/d/1UiIgWgnvkoPLIaxdBcz3XSPTymOVDKUp-pH7pv-HyhY"
+
+dtCasesByAge0 <- read_sheet(
+  strPhac1_age, col_types="c", col_names=T, sheet=2, range="A2:D11"  ) %>% setDT
+
+dtCasesByAge0
+dtCasesByAge <- dtCasesByAge0 %>% melt (id=1)
+dtCasesByAge[,':=' (No=value %>% str2number(1), Perc=value %>% str2number(2) ) ]
+
+
+dtCasesByAge[ , variable:=gsub("Number of cases with case reports (percentage)", "All sexes", variable)]
+
+
+
+```
+
